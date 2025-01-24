@@ -5,43 +5,51 @@ using UnityEngine;
 public class CharacterMovement : MonoBehaviour
 {
     public float speed = 5f;
-    public float jumpForce = 5f;
-    public Transform groundCheck;
-    public float groundCheckRadius = 0.2f;
+    public float groundDistance;
     public LayerMask groundLayer; 
-    private Rigidbody2D rb;
+    public SpriteRenderer sr;
+    
+    private Rigidbody rb;
     private bool isGrounded;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        if (rb == null)
-        {
-            Debug.LogError("Rigidbody2D not found on this GameObject.");
-        }
-        if (groundCheck == null)
-        {
-            Debug.LogError("groundCheck Transform not found on this GameObject.");
-        }
+        rb = GetComponent<Rigidbody>();
     }
 
-    void FixedUpdate()
+    void Update()
     {
-        if (rb == null || groundCheck == null)
+        if (rb == null)
         {
             return;
         }
+        RaycastHit hit;
+        Vector3 castPos = transform.position;
+        castPos.y += 1;
 
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-
-        float moveHorizontal = Input.GetAxis("Horizontal");
-
-        rb.velocity = new Vector2(moveHorizontal * speed, rb.velocity.y);
-
-
-        if (isGrounded && Input.GetButtonDown("Jump"))
+        if(Physics.Raycast(castPos, -transform.up, out hit, Mathf.Infinity, groundLayer))
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            if(hit.collider != null)
+            {
+                Vector3 movePos = transform.position;
+                movePos.y = hit.point.y + groundDistance;
+                transform.position = movePos;
+            }
         }
+        float x = Input.GetAxis("Horizontal");
+        float y = Input.GetAxis("Vertical");
+
+        Vector3 moveDirection = new Vector3(x, 0, y);
+        rb.velocity = moveDirection * speed;
+
+        if(x != 0 && x < 0)
+        {
+            sr.flipX = true;
+        }
+        else if(x != 0 && x > 0)
+        {
+            sr.flipX = false;
+        }
+
     }
 }
